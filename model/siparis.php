@@ -24,12 +24,12 @@ class siparisdb extends model
         }
     }
 
-    public function update($id,$menuler,$masaNo)
+    public function update($restoranid,$menuler,$masaNo)
     {
         try {
             // gelen değeri var olan değerim üzerinde yazar.
             $sorgu = $this->conn->prepare("update tblsiparis set menuler = CONCAT(menuler,',',?) where masaNo = ? and restoranFK = ?");
-            $sorgu->execute([$menuler,$masaNo,$id]);
+            $sorgu->execute([$menuler,$masaNo,$restoranid]);
             if ($sorgu)
             {
                 return true;
@@ -45,6 +45,23 @@ class siparisdb extends model
     {
         try {
             $sorgu = $this->conn->prepare("select masaNo,durum from tblsiparis where restoranFK =?");
+            $sorgu->execute([$id]);
+            if ($sorgu and $sorgu->rowCount() > 0)
+            {
+                $veri = $sorgu->fetchAll(PDO::FETCH_ASSOC);
+                return $veri;
+            }
+            else return false;
+        }catch (PDOException $e)
+        {
+            return false;
+        }
+    }
+
+    public function getsForMasa($restoranId,$masaNo)
+    {
+        try {
+            $sorgu = $this->conn->prepare("select  from tblsiparis where restoranFK =? and masaNo = ?");
             $sorgu->execute([$id]);
             if ($sorgu and $sorgu->rowCount() > 0)
             {
@@ -78,13 +95,9 @@ class siparisdb extends model
     public function delete($restoranid,$masano)
     {
         try {
-            $sorgu = $this->conn->prepare("insert into tblsiparist (restoranFK,calisanFK,masaNo,menuler,tarih) select restoranFK,calisanFK,masaNo,menuler,tarih from tblsiparis where masaNo =? and restoranFK =?;");
+            $sorgu = $this->conn->prepare("delete from tblsiparis where masaNo =? and restoranFK =?");
             $sorgu->execute([$masano,$restoranid]);
-            if ($sorgu)
-            {
-                $veri = $sorgu->fetch(PDO::FETCH_ASSOC);
-                return $veri;
-            }
+            if ($sorgu) return true;
             else return false;
         }catch (PDOException $e)
         {

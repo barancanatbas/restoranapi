@@ -16,8 +16,7 @@ class siparisTdb extends model
             $sorgu->execute([$masano,$restoranid]);
             if ($sorgu)
             {
-                $veri = $sorgu->fetch(PDO::FETCH_ASSOC);
-                return $veri;
+                return true;
             }
             else return false;
         }catch (PDOException $e)

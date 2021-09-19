@@ -1,8 +1,9 @@
 <?php
 include_once 'config/controller.php';
 include_once 'model/siparis.php';
-include_once 'model/restoran.php';
+include_once 'model/calisanlar.php';
 include_once 'model/menuler.php';
+include_once "model/siparisT.php";
 
 class siparis extends controller
 {
@@ -10,12 +11,14 @@ class siparis extends controller
     protected $db;
     protected $restoranDb;
     protected $menuDb;
+    protected $siparisTdb;
     public function __construct()
     {
         parent::__construct();
         $this->db = new siparisdb();
-        $this->restoranDb = new restoranDb();
+        $this->restoranDb = new calisanlarDb();
         $this->menuDb = new menulerdb();
+        $this->siparisTdb = new siparisTdb();
     }
 
     // siparis methoduna gelen değerlere göre bu methodlar çalışır. Bu methodalara url ile ulaşılmaz buna program içinden ulaşman gerek.
@@ -35,13 +38,12 @@ class siparis extends controller
             die();
         }
     }
-    private function update($post,$id)
+    private function update($post,$restoranid)
     {
         $menuler = $this->filtre($post["menuler"]);
         $masaNo = $this->filtre($post["masaNo"]);
-        $tarih = time();
 
-        $result = $this->db->update($id,$menuler,$masaNo);
+        $result = $this->db->update($restoranid,$menuler,$masaNo);
         if($result)
         {
             $result2["status"] = 1;
@@ -55,30 +57,24 @@ class siparis extends controller
     // bu method içerisinde aktif masa bulunursa o masa üzerinde güncelleme yapılacak. Eğer aktif masa yoksa yeni bir masa kaydı açılır.
     public function siparis()
     {
-        if (isset($_POST["jwtrestoran"]))
+        if (isset($_POST["jwtcalisan"]))
         {
-            $jwtrestoran = $_POST["jwtrestoran"];
-            $restoran = $this->decodeJWT($jwtrestoran);
-            $restoran["oturum"] = $this->restoranDb->checkrestoran($restoran["restoranMail"]);
-
-            if ($restoran["oturum"])
+            $jwtcalisan = $_POST["jwtcalisan"];
+            $calisan = $this->decodeJWT($jwtcalisan);
+            $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
+            die(json_encode($calisan));
+            if ($calisan["oturum"])
             {
-                $id = $this->filtre($_POST["restoranid"]);
-                if ($id != $restoran["id"])
-                {
-                    $result["status"] = 0;
-                    $result["message"] = "Bilgilerin doğruluğundan emin olun";
-                    echo json_encode($result);
-                    die();
-                }
+                $restoranFK = $calisan["restoranFK"];
                 $masaNo = $this->filtre($_POST["masaNo"]);
+
                 $aktifmasa = $this->db->get($id,$masaNo);
                 if ($aktifmasa)
                 {
-                    $this->update($_POST,$id);
+                    $this->update($_POST,$restoranFK);
                 }
                 else{
-                    $this->insert($_POST,$id);
+                    $this->insert($_POST,$restoranFK);
                 }
             }
             else{
@@ -93,15 +89,15 @@ class siparis extends controller
     // müşterilerin oldukları masalar
     public function aktifMasalar()
     {
-        if (isset($_POST["jwtrestoran"]))
+        if (isset($_POST["jwtcalisan"]))
         {
-            $jwt = $_POST["jwtrestoran"];
-            $restoran = $this->decodeJWT($jwt);
-            $restoran["oturum"] = $this->restoranDb->checkrestoran($restoran["restoranMail"]);
-            if ($restoran["oturum"])
+            $jwt = $_POST["jwtcalisan"];
+            $calisan = $this->decodeJWT($jwt);
+            $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
+            if ($calisan["oturum"])
             {
-                $id = $restoran["id"];
-                $result = $this->db->gets($id);
+                $restoranId = $calisan["restoranFK"];
+                $result = $this->db->gets($restoranId);
                 if ($result)
                 {
                     echo json_encode($result);
@@ -117,14 +113,14 @@ class siparis extends controller
     // aktif masanın sipariş verdikleri ve detayları
     public function aktifMasa()
     {
-        if (isset($_POST["jwtrestoran"]))
+        if (isset($_POST["jwtcalisan"]))
         {
-            $jwt = $_POST["jwtrestoran"];
-            $restoran = $this->decodeJWT($jwt);
-            $restoran["oturum"] = $this->restoranDb->checkrestoran($restoran["restoranMail"]);
-            if ($restoran["oturum"])
+            $jwt = $_POST["jwtcalisan"];
+            $calisan = $this->decodeJWT($jwt);
+            $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
+            if ($calisan["oturum"])
             {
-                $restoranid = $restoran["id"];
+                $restoranid = $calisan["restoranFK"];
                 $masano = $this->filtre($_POST["masaNo"]);
                 $result = $this->db->get($restoranid,$masano);
                 if ($result)
@@ -153,18 +149,41 @@ class siparis extends controller
     }
 
     // masa hesap kapatma
-    public function aktifMasaKapat()
+    public function hesapode()
     {
-        if (isset($_POST["jwtrestoran"]) and isset($_POST["masaNo"]))
+        if (isset($_POST["jwtcalisan"]) and isset($_POST["masaNo"]))
         {
-            $jwtrestoran = $_POST["jwtrestoran"];
-            $restoran = $this->decodeJWT($jwtrestoran);
-            $restoran["oturum"] = $this->restoranDb->checkrestoran($restoran["restoranMail"]);
+            $jwtcalisan = $_POST["jwtcalisan"];
+            $calisan = $this->decodeJWT($jwtcalisan);
+            $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
 
-            if ($restoran["oturum"])
+            if ($calisan["oturum"])
             {
                 $masano = $this->filtre($_POST["masaNo"]);
+                $restoranFK= $calisan["restoranFK"];
 
+                $result = $this->siparisTdb->insert($restoranFK,$masano);
+                if ($result)
+                {
+                    $result2 = $this->db->delete($restoranFK,$masano);
+                    if ($result2)
+                    {
+                        $result3["status"] = 1;
+                        $result3["message"] = "hesap kapatıldı";
+                        echo json_encode($result3);
+                        die();
+                    }
+                    else{
+                        $result3["status"] = 0;
+                        $result3["message"] = "işlem başarısız";
+                        echo json_encode($result3);
+                        die();
+                    }
+                }
+                $result3["status"] = 0;
+                $result3["message"] = "hesap kapatıldı";
+                echo json_encode($result3);
+                die();
             }
         }
     }
