@@ -50,14 +50,14 @@ class menuler extends controller
     }
 
     // gelen restoran token bilgisine göre id değerini alır ve menuid ile eşleşen değerleri getirir.
-    public function get($menuId = 0)
+    public function get()
     {
-        if (isset($_POST["jwtRestoran"]) and $menuId != 0) {
+        if (isset($_POST["jwtRestoran"]) and isset($_POST["menuId"])) {
             $jwtrestoran = $_POST["jwtRestoran"];
             $restoran = $this->decodeJWT($jwtrestoran);
             $restoran["oturum"] = $this->restoranDb->checkrestoran($restoran["restoranMail"]);
             if ($restoran["oturum"] == true) {
-
+                $menuId = $this->filtre($_POST["menuId"]);
                 $result = $this->db->get($menuId, $restoran["id"]);
                 if ($result) {
                     echo json_encode($result);

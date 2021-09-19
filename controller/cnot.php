@@ -14,16 +14,17 @@ class cnot extends controller
         $this->restorandb = new restoranDb();
     }
 
-    public function get($id = 0)
+    public function get()
     {
-        if (isset($_POST["jwtRestoran"]) and $id !=0)
+        if (isset($_POST["jwtRestoran"]) and isset($_POST["calisanid"]))
         {
             $jwtrestoran = $_POST["jwtRestoran"];
+            $calisanid = $this->filtre($_POST["calisanid"]);
             $restoran = $this->decodeJWT($jwtrestoran);
             $restoran["oturum"] = $this->restorandb->checkrestoran($restoran["restoranMail"]);
             if($restoran["oturum"])
             {
-                $result = $this->db->get($id);
+                $result = $this->db->get($calisanid);
                 if ($result)
                 {
                     echo json_encode($result);
