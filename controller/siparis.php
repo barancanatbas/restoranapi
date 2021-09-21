@@ -127,19 +127,22 @@ class siparis extends controller
                 {
                     $hesap =0;
                     $result["menuler"] = explode(",",$result["menuler"]);
-                    foreach ($result["menuler"] as $key => $value)
+
+                    foreach ($result["menuler"] as $key=>$value)
                     {
-                        $result["menuler"][$key] = explode("x",$result["menuler"][$key]);
-                        $menuresult = $this->menuDb->get($result["menuler"][$key][0],$restoranid);
-                        if ($menuresult)
-                        {
-                            $result["menuler"][$key][0] = $menuresult;
-                            $hesap += $menuresult["menuFiyat"]*$result["menuler"][$key][1];
-                        }
+                        $veri = explode("x",$result["menuler"][$key]);
+                        $menu = $veri[0];
+                        $adet = $veri[1];
+
+                        $menuveri = $this->menuDb->get($menu,$result["restoranFK"]);
+
+                        $hesap += (int)$adet * (int)$menuveri["menuFiyat"];
+                        $menuveri["adet"] = $adet;
+
+                        $result["menuler"][$key] = $menuveri;
                     }
-                    $result["hesap"] = $hesap." TL";
+                    $result["hesap"] = $hesap;
                     echo json_encode($result);
-                    die();
                 }
                 else{
                     echo "veriler gelmedi";
@@ -189,4 +192,23 @@ class siparis extends controller
     }
 
 
+
+    /*
+     $hesap =0;
+                    $result["menuler"] = explode(",",$result["menuler"]);
+                    foreach ($result["menuler"] as $key => $value)
+                    {
+                        $result["menuler"][$key] = explode("x",$result["menuler"][$key]);
+                        $menuresult = $this->menuDb->get($result["menuler"][$key][0],$restoranid);
+                        if ($menuresult)
+                        {
+                            $result["menuler"][$key][0] = $menuresult;
+                            $hesap += $menuresult["menuFiyat"]*$result["menuler"][$key][1];
+                        }
+                    }
+                    $result["hesap"] = $hesap." TL";
+                    echo json_encode($result);
+                    die();
+     *
+     * */
 }
