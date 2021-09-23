@@ -64,7 +64,6 @@ class menuler extends controller
                     echo json_encode($result);
                 }
             }
-            echo json_encode($calisan);
         }
         else{
             $result["status"] = 0;
@@ -119,7 +118,7 @@ class menuler extends controller
                     echo json_encode($result);
                 }
             }
-            echo json_encode($calisan);
+            
         }
         else{
             $result["status"] = 0;
