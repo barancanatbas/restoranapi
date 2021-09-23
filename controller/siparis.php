@@ -25,7 +25,7 @@ class siparis extends controller
     private function insert($post,$id)
     {
         $calisanfk = $this->filtre($post["calisanFK"]);
-        $menuler = $this->filtre($post["menuler"]);
+        $menuler = trim($this->filtre($post["menuler"]),",");
         $masaNo = $this->filtre($post["masaNo"]);
         $tarih = time();
 

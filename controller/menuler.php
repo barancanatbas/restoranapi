@@ -3,17 +3,20 @@ include_once 'config/controller.php';
 include_once 'model/menuler.php';
 include_once 'model/restoran.php';
 include_once 'vendor/phpqrcode/qrlib.php';
+include_once 'model/calisanlar.php';
 
 class menuler extends controller
 {
     protected $db;
     protected $restoranDb;
+    protected $calisandb;
 
     public function __construct()
     {
         parent::__construct();
         $this->db = new menulerdb();
         $this->restoranDb = new restoranDb();
+        $this->calisandb = new calisanlarDb();
     }
 
     // gelen restoran token bilgisine göre id değerini alır ve ilgili restoran menu bilgilerini geriye döndürür.
@@ -41,6 +44,27 @@ class menuler extends controller
                 $result["message"] = "Oturum bilgilerinin doğruluğundan emin olun";
                 echo json_encode($result);
             }
+        }
+        elseif(isset($_POST["jwtCalisan"]))
+        {
+            $jwtcalisan = $_POST["jwtCalisan"];
+            $calisan = $this->decodeJWT($jwtcalisan);
+
+            $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
+            if($calisan["oturum"])
+            {
+                $result = $this->db->gets($calisan["restoranFK"]);
+                if ($result) {
+                    echo json_encode($result);
+                    die();
+                }
+                else{
+                    $result["status"] = 0;
+                    $result["message"] = "Bilgi Bulunamadı";
+                    echo json_encode($result);
+                }
+            }
+            echo json_encode($calisan);
         }
         else{
             $result["status"] = 0;
@@ -74,6 +98,28 @@ class menuler extends controller
                 $result["message"] = "Oturum bilgilerinin doğruluğundan emin olun";
                 echo json_encode($result);
             }
+        }
+        elseif(isset($_POST["jwtCalisan"]))
+        {
+            $jwtcalisan = $_POST["jwtCalisan"];
+            $calisan = $this->decodeJWT($jwtcalisan);
+
+            $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
+            if($calisan["oturum"])
+            {
+                $menuId = $this->filtre($_POST["menuId"]);
+                $result = $this->db->get($menuId, $calisan["restoranFK"]);
+                if ($result) {
+                    echo json_encode($result);
+                    die();
+                }
+                else{
+                    $result["status"] = 0;
+                    $result["message"] = "menu bilgisi bulunamadı";
+                    echo json_encode($result);
+                }
+            }
+            echo json_encode($calisan);
         }
         else{
             $result["status"] = 0;
