@@ -62,13 +62,12 @@ class siparis extends controller
             $jwtcalisan = $_POST["jwtcalisan"];
             $calisan = $this->decodeJWT($jwtcalisan);
             $calisan["oturum"] = $this->calisandb->checkcalisan($calisan["tc"]);
-            die(json_encode($calisan));
             if ($calisan["oturum"])
             {
                 $restoranFK = $calisan["restoranFK"];
                 $masaNo = $this->filtre($_POST["masaNo"]);
 
-                $aktifmasa = $this->db->get($id,$masaNo);
+                $aktifmasa = $this->db->get($restoranFK,$masaNo);
                 if ($aktifmasa)
                 {
                     $this->update($_POST,$restoranFK);
