@@ -24,6 +24,7 @@ class restoranlar extends controller
             if ($restoran)
             {
                 $restoran["jwtrestoran"] =$this->encodeJWT($restoran);
+                $restoran["status"] = 1;
                 echo json_encode($restoran);
             }
             else{
