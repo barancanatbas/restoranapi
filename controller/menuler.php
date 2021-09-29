@@ -83,6 +83,7 @@ class menuler extends controller
                 $menuId = $this->filtre($_POST["menuId"]);
                 $result = $this->db->get($menuId, $restoran["id"]);
                 if ($result) {
+                    $result["status"] = 1;
                     echo json_encode($result);
                     die();
                 }
@@ -200,7 +201,7 @@ class menuler extends controller
                         echo json_encode("başarısız");
                     }
                 }
-                elseif ($islem == "resim" and isset($_FILES["image"]) and !empty($_FILES["images"]["tmp_name"])) {
+                elseif ($islem == "resim" and isset($_FILES["image"])) {
                     $yol = "images/menuler/" . uniqid() . ".png";
 
                     $oldmenu = $this->db->get($menuId, $restoran["id"]);
@@ -220,7 +221,7 @@ class menuler extends controller
                 else{
                     $result["status"] = 0;
                     $result["message"] = "Lütfen İşlem bilgisi gönderin";
-                    echo json_encode($result);
+                    echo json_encode($_POST);
                 }
             }
             else{
