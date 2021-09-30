@@ -11,12 +11,15 @@ class calisanlarDb extends model
     public function gets($restoranFk)
     {
         try {
-            $sorgu = $this->conn->prepare("select * from tblcalisan where restoranFK = ?");
+            $sorgu = $this->conn->prepare("select c.ad,c.soyad,c.mail,c.id,m.meslekAd from tblcalisan c inner join tblmeslek m on c.meslekFK = m.id where restoranFK = ?");
             $sorgu->execute([$restoranFk]);
-            $veri = $sorgu->fetchAll(PDO::FETCH_ASSOC);
-            print_r($veri);
+            if ($sorgu)
+            {
+                return $sorgu->fetchAll(PDO::FETCH_ASSOC);
+            }
+            else return false;
         } catch (PDOException $e) {
-            echo $e;
+            return false;
         }
     }
 
